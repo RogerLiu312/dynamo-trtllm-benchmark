@@ -58,7 +58,7 @@ set_clock_cmd="bash ${SCRIPTS_DIR}/set_clock.sh"
 mkdir -p ${LOG_DIR}
 echo "trying to submit job"
 
-sub_dir=${LOG_DIR}/ctx${num_ctx_servers}_gen${num_gen_servers}_dep${gen_tp_size}_batch${gen_batch_size}_eplb${eplb_num_slots}_mtp${mtp_size}
+sub_dir=${LOG_DIR}
 
 echo "concurrency_list: ${concurrency_list}"
 
@@ -71,7 +71,7 @@ enable_pdl=false
 if [ "${gen_enable_attention_dp}" = "false" ]; then
     enable_pdl=true
     echo "enable_pdl: ${enable_pdl}"
-    sub_dir=${LOG_DIR}/ctx${num_ctx_servers}_gen${num_gen_servers}_tep${gen_tp_size}_batch${gen_batch_size}_eplb${eplb_num_slots}_mtp${mtp_size}
+    sub_dir=${LOG_DIR}
 fi
 
 full_logdir=${sub_dir}
@@ -83,6 +83,8 @@ mkdir -p ${artifacts_dir}
 # srun ${set_clock_cmd}
 
 container_mounts=${MOUNT_DIR}:${MOUNT_DIR},${model_path}:${model_path}
+
+srun --overlap --ntasks $((ctx_nodes + gen_nodes)) --ntasks-per-node=1 --cpus-per-task=1 /bin/bash -c 'nvidia-smi --query-gpu=index,utilization.gpu,utilization.memory,temperature.gpu,temperature.memory,power.draw,clocks.sm,clocks.mem,memory.total,memory.used --format=csv,noheader,nounits -lms 5000 | while IFS= read -r input || [ -n "$input" ] ; do timestamp=$(date +%s%3N); printf "%s.%s,%s\n" "${timestamp:0:10}" "${timestamp:10:3}" "${input}"; done  >> ${full_logdir}/${SLURM_JOB_ID}_${SLURM_NODEID}_${SLURMD_NODENAME}_nvsmi_output.txt' & 
 
 # start the container
 srun -l --container-image=${image} \
