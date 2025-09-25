@@ -84,7 +84,7 @@ mkdir -p ${artifacts_dir}
 
 container_mounts=${MOUNT_DIR}:${MOUNT_DIR},${model_path}:${model_path},${LOG_DIR}:${LOG_DIR}
 
-srun --overlap --ntasks $((ctx_nodes + gen_nodes)) --ntasks-per-node=1 --cpus-per-task=1 /bin/bash -c 'nvidia-smi --query-gpu=index,utilization.gpu,utilization.memory,temperature.gpu,temperature.memory,power.draw,clocks.sm,clocks.mem,memory.total,memory.used --format=csv,noheader,nounits -lms 5000 | while IFS= read -r input || [ -n "$input" ] ; do timestamp=$(date +%s%3N); printf "%s.%s,%s\n" "${timestamp:0:10}" "${timestamp:10:3}" "${input}"; done  >> ${full_logdir}/${SLURM_JOB_ID}_${SLURM_NODEID}_${SLURMD_NODENAME}_nvsmi_output.txt' & 
+srun --overlap --ntasks $((ctx_nodes + gen_nodes)) --ntasks-per-node=1 --cpus-per-task=1 --export=full_logdir=${full_logdir} /bin/bash -c 'nvidia-smi --query-gpu=index,utilization.gpu,utilization.memory,temperature.gpu,temperature.memory,power.draw,clocks.sm,clocks.mem,memory.total,memory.used --format=csv,noheader,nounits -lms 5000 | while IFS= read -r input || [ -n "$input" ] ; do timestamp=$(date +%s%3N); printf "%s.%s,%s\n" "${timestamp:0:10}" "${timestamp:10:3}" "${input}"; done  >> ${full_logdir}/${SLURM_JOB_ID}_${SLURM_NODEID}_${SLURMD_NODENAME}_nvsmi_output.txt' & 
 
 # start the container
 srun -l --container-image=${image} \
