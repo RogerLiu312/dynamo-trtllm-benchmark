@@ -47,6 +47,7 @@ isl=${21}
 osl=${22}
 num_gpus_per_node=${23}
 log_dir=${24}
+benchmark_image=${25:-nvcr.io/nvidia/tritonserver:25.08-py3-sdk}
 
 ctx_max_seq_len=$((${isl} + 203))
 gen_max_seq_len=$((${isl} + ${osl} + 203))
@@ -230,7 +231,7 @@ done
 total_gpus=$((ctx_gpus + gen_gpus))
 
 # start the loadgen
-srun -l --container-image=nvcr.io/nvidia/tritonserver:25.08-py3-sdk \
+srun -l --container-image=${benchmark_image} \
         --container-mounts=${container_mounts},${artifacts_dir}:${artifacts_dir} \
         --mpi=pmix --overlap -N 1 -n 1 \
 	-w ${nodes[0]} \
