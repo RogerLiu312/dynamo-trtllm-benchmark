@@ -192,7 +192,7 @@ for ((i=1; i<=PREFILL_COUNT; i++)); do
       --ntasks ${ctx_tp_size} \
       --ntasks-per-node ${num_gpus_per_node} \
       --nodes ${num_ctx_nodes} \
-      bash ${SCRIPTS_DIR}/scripts/start_disagg_worker.sh ${full_logdir}/prefill_config.yaml "${enable_pdl}" ${ctx_gpus} ${nsys_on} ${served_model_name} ${model_path} 'prefill' &> ${full_logdir}/prefill_workers_${SLURM_NODEID}_${SLURMD_NODENAME}.log &
+      bash ${SCRIPTS_DIR}/scripts/start_disagg_worker.sh ${full_logdir}/prefill_config.yaml "${enable_pdl}" ${ctx_gpus} ${nsys_on} ${served_model_name} ${model_path} 'prefill' &> ${full_logdir}/${SLURM_JOB_ID}_prefill_workers_${SLURM_NODEID}_${SLURMD_NODENAME}.log &
   prefill_pids+=($!)
   echo "$!" >> "$PID_FILE"
 done
@@ -223,7 +223,7 @@ for ((i=1; i<=DECODE_COUNT; i++)); do
       --ntasks $gen_tp_size \
       --ntasks-per-node ${num_gpus_per_node} \
       --overlap \
-      bash ${SCRIPTS_DIR}/scripts/start_disagg_worker.sh ${full_logdir}/decode_config.yaml "${enable_pdl}" ${ctx_gpus} ${nsys_on} ${served_model_name} ${model_path} 'decode' &> ${full_logdir}/decode_workers_${SLURM_NODEID}_${SLURMD_NODENAME}.log &
+      bash ${SCRIPTS_DIR}/scripts/start_disagg_worker.sh ${full_logdir}/decode_config.yaml "${enable_pdl}" ${ctx_gpus} ${nsys_on} ${served_model_name} ${model_path} 'decode' &> ${full_logdir}/${SLURM_JOB_ID}_decode_workers_${SLURM_NODEID}_${SLURMD_NODENAME}.log &
   echo "$!" >> "$PID_FILE"
 done
 
@@ -234,7 +234,7 @@ srun -l --container-image=nvcr.io/nvidia/tritonserver:25.08-py3-sdk \
         --container-mounts=${container_mounts},${artifacts_dir}:${artifacts_dir} \
         --mpi=pmix --overlap -N 1 -n 1 \
 	-w ${nodes[0]} \
-        bash ${SCRIPTS_DIR}/scripts/bench.sh ${served_model_name} ${MULTI_ROUND} ${num_gen_servers} "${concurrency_list}" ${STREAMING} ${full_logdir} ${total_gpus} ${artifacts_dir} ${model_path} ${isl} ${osl} ${kind} > ${full_logdir}/bench.log 2>&1
+        bash ${SCRIPTS_DIR}/scripts/bench.sh ${served_model_name} ${MULTI_ROUND} ${num_gen_servers} "${concurrency_list}" ${STREAMING} ${full_logdir} ${total_gpus} ${artifacts_dir} ${model_path} ${isl} ${osl} ${kind} > ${full_logdir}/${SLURM_JOB_ID}_bench.log 2>&1
 
 
 # Cleanup will be handled by the EXIT trap
