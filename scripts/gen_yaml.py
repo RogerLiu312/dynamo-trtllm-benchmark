@@ -154,6 +154,7 @@ def gen_config_file(
     worker_start_port: int = 8001,
     server_port: int = 8000,
     cache_transceiver_max_num_tokens: int = 4608,
+    gpus_per_node: int = 8,
 ) -> None:
     """
     Generate configuration YAML file for disaggregated inference.
@@ -210,7 +211,7 @@ def gen_config_file(
         "cache_transceiver_config": {
             "max_tokens_in_buffer": cache_transceiver_max_num_tokens,
             "backend": (
-                "default" if ctx_tp_size >= 8 else "DEFAULT"
+                "default" if gpus_per_node == 8 else "DEFAULT"
             ),  # GB200 uses CAPITAL
         },
     }
@@ -239,7 +240,7 @@ def gen_config_file(
         "cache_transceiver_config": {
             "max_tokens_in_buffer": cache_transceiver_max_num_tokens,
             "backend": (
-                "default" if ctx_tp_size >= 8 else "DEFAULT"
+                "default" if gpus_per_node == 8 else "DEFAULT"
             ),  # GB200 uses CAPITAL
         },
         "stream_interval": 20,
@@ -387,6 +388,12 @@ if __name__ == "__main__":
         default=4608,
         help="Max number of tokens for cache transceiver",
     )
+    parser.add_argument(
+        "--gpus_per_node",
+        type=int,
+        default=8,
+        help="Number of GPUs per node",
+    )
 
     args = parser.parse_args()
 
@@ -418,4 +425,5 @@ if __name__ == "__main__":
         args.worker_start_port,
         args.server_port,
         args.cache_transceiver_max_num_tokens,
+        args.gpus_per_node,
     )

@@ -46,12 +46,13 @@ image=${20}
 isl=${21}
 osl=${22}
 num_gpus_per_node=${23}
+log_dir=${24}
 
 ctx_max_seq_len=$((${isl} + 203))
 gen_max_seq_len=$((${isl} + ${osl} + 203))
 
 WORK_DIR=${MOUNT_DIR}
-LOG_DIR=$WORK_DIR/${kind}-bm-${isl}-${osl}-${SLURM_JOB_ID}
+LOG_DIR=${log_dir:-${WORK_DIR}/${kind}-bm-${isl}-${osl}-${SLURM_JOB_ID}}
 SCRIPTS_DIR=${WORK_DIR}/
 set_clock_cmd="bash ${SCRIPTS_DIR}/set_clock.sh"
 mkdir -p ${LOG_DIR}
@@ -111,6 +112,7 @@ srun -l --container-name=${CONTAINER_NAME} \
             --gen_max_seq_len ${gen_max_seq_len} \
             --gen_gpu_memory_fraction ${gen_gpu_memory_fraction} \
             --eplb_num_slots ${eplb_num_slots} \
+            --gpus_per_node ${num_gpus_per_node} \
             $(if [ "${gen_enable_attention_dp}" = "true" ]; then echo "--gen_enable_attention_dp"; fi) \
             $(if [ "${ctx_enable_attention_dp}" = "true" ]; then echo "--ctx_enable_attention_dp"; fi) \
             $(if [ "${mtp_size}" -gt 0 ]; then echo "--mtp_size ${mtp_size}"; fi)
