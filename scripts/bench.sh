@@ -152,7 +152,7 @@ for concurrency in ${concurrency_list}; do
     concurrency=$((concurrency * num_gen_servers))
     num_prompts=$((concurrency * multi_round))
     echo "Benchmarking with concurrency ${concurrency} ... ${num_prompts} prompts"
-    mkdir -p ${log_path}/concurrency_${concurrency}
+    mkdir -p ${artifacts_dir}/concurrency_${concurrency}
     genai-perf profile \
     	--model ${model} \
     	--tokenizer ${model_path} \
@@ -173,7 +173,7 @@ for concurrency in ${concurrency_list}; do
     	--warmup-request-count $(($concurrency*2)) \
 	    --num-dataset-entries ${num_prompts} \
     	--random-seed 100 \
-    	--artifact-dir ${artifacts_dir} \
+    	--artifact-dir ${artifacts_dir}/concurrency_${concurrency} \
     	-- \
     	-v \
     	--max-threads ${concurrency} \
