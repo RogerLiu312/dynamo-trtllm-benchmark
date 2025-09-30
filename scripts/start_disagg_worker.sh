@@ -10,7 +10,7 @@ model_name=$4
 model_path=$5
 disaggregation_mode=$6
 unset UCX_TLS
-unset UCX_NET_DEVICES
+# unset UCX_NET_DEVICES
 echo "config_file: ${config_file}, enable_pdl: ${enable_pdl}, ctx_gpus: ${ctx_gpus}, disaggregation_mode: ${disaggregation_mode}"
 
 # Read configuration values from the YAML config file
