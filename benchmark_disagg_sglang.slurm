@@ -180,7 +180,7 @@ for ((i=0; i<num_ctx_servers; i++)); do
       --ntasks 1 \
       --ntasks-per-node 1 \
       --nodes 1 \
-      bash ${SCRIPTS_DIR}/scripts/start_disagg_worker_sglang.sh dynamo prefill ${served_model_name} ${model_path} ${num_ctx_nodes} ${LEADER_IP} ${j} ${ctx_tp_size} ${SCRIPTS_DIR}/scripts/deepep.json 0.75 ${ctx_batch_size} &> ${full_logdir}/${SLURM_JOB_ID}_prefill_workers_${i}_${j}_${node_name}.log &
+      bash ${SCRIPTS_DIR}/scripts/start_disagg_worker_sglang.sh dynamo prefill ${served_model_name} ${model_path} ${num_ctx_nodes} ${LEADER_IP} ${j} ${ctx_tp_size} ${SCRIPTS_DIR}/scripts/deepep.json 0.75 ${ctx_batch_size} ${num_gpus_per_node} &> ${full_logdir}/${SLURM_JOB_ID}_prefill_workers_${i}_${j}_${node_name}.log &
     prefill_pids+=($!)
     echo "$!" >> "$PID_FILE"
   done
@@ -210,7 +210,7 @@ for ((i=0; i<num_gen_servers; i++)); do
         --ntasks 1 \
         --ntasks-per-node 1 \
         --overlap \
-        bash ${SCRIPTS_DIR}/scripts/start_disagg_worker_sglang.sh dynamo decode ${served_model_name} ${model_path} ${num_gen_nodes} ${LEADER_IP} ${j} ${gen_tp_size} ${SCRIPTS_DIR}/scripts/deepep.json ${gen_gpu_memory_fraction} ${gen_batch_size}  &> ${full_logdir}/${SLURM_JOB_ID}_decode_workers_${i}_${j}_${node_name}.log &
+        bash ${SCRIPTS_DIR}/scripts/start_disagg_worker_sglang.sh dynamo decode ${served_model_name} ${model_path} ${num_gen_nodes} ${LEADER_IP} ${j} ${gen_tp_size} ${SCRIPTS_DIR}/scripts/deepep.json ${gen_gpu_memory_fraction} ${gen_batch_size} ${num_gpus_per_node} &> ${full_logdir}/${SLURM_JOB_ID}_decode_workers_${i}_${j}_${node_name}.log &
     echo "$!" >> "$PID_FILE"
   done
 done
