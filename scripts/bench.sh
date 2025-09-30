@@ -21,6 +21,7 @@ model_path=$9
 isl=${10}
 osl=${11}
 kind=${12}
+timeout_minutes=${13:-20}
 
 if [ "$#" -ne 12 ]; then
     echo "Error: Expected 12 arguments, got $#"
@@ -41,6 +42,7 @@ echo "  model_path: $model_path"
 echo "  isl: $isl"
 echo "  osl: $osl"
 echo "  kind: $kind"
+echo "  timeout_minutes: $timeout_minutes"
 
 
 
@@ -100,8 +102,8 @@ echo "${deployment_config}" > "${artifacts_dir}/deployment_config.json"
 
 # Wait for server to become healthy (up to 50 attempts)
 failed=true
-for ((i=1; i<=50; i++)); do
-    sleep $((i == 1 ? WAIT_TIME : 20))
+for ((i=1; i<=60; i++)); do
+    sleep $((i == 1 ? WAIT_TIME : ${timeout_minutes} ))
     response=$(curl -s -w "\n%{http_code}" "${hostname}:${port}/health")
     http_code=$(echo "$response" | tail -n1)
     body=$(echo "$response" | sed '$d')
