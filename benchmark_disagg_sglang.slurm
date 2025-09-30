@@ -217,6 +217,8 @@ done
 
 total_gpus=$((ctx_gpus + gen_gpus))
 
+sleep 20
+
 # start the loadgen
 srun -l --container-image=${benchmark_image} \
         --container-mounts=${container_mounts},${artifacts_dir}:${artifacts_dir} \
