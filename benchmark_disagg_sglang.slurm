@@ -54,7 +54,7 @@ gen_max_seq_len=$((${isl} + ${osl} + 203))
 
 WORK_DIR=${MOUNT_DIR}
 LOG_DIR=${log_dir:-${WORK_DIR}/${kind}-bm-${isl}-${osl}-${SLURM_JOB_ID}}
-SCRIPTS_DIR=${WORK_DIR}/
+SCRIPTS_DIR=${WORK_DIR}
 set_clock_cmd="bash ${SCRIPTS_DIR}/set_clock.sh"
 mkdir -p ${LOG_DIR}
 echo "trying to submit job"
@@ -150,24 +150,17 @@ srun -l --container-name=${CONTAINER_NAME} \
         --mpi=pmix --overlap -N 1 -n 1 \
 	--container-env ETCD_ENDPOINTS,NATS_SERVER,HEAD_NODE_IP,HEAD_NODE \
         -w ${nodes[0]} \
-        bash ${SCRIPTS_DIR}/scripts/start_frontend_sglang.sh &> ${full_logdir}/output_server.log &
+        bash ${SCRIPTS_DIR}/scripts/start_frontend_sglang.sh &> ${full_logdir}/${SLURM_JOB_ID}_output_server.log &
 SERVER_PID=$!
 echo "$SERVER_PID" >> "$PID_FILE"
 
 # wait for the server to start
 sleep 10
 
-PREFILL_COUNT=$(grep 'prefill_count:' "${full_logdir}/instance_config.yaml" | awk '{print $2}')
-if [ -z "$PREFILL_COUNT" ]; then
-    echo "Error: Failed to extract prefill_count from instance_config.yaml"
-    exit 1
-fi
-echo "Prefill Count: $PREFILL_COUNT"
-
 # start the prefill workers
 prefill_pids=()
 num_ctx_nodes=$((ctx_nodes/num_ctx_servers))
-for ((i=1; i<=PREFILL_COUNT; i++)); do
+for ((i=0; i<num_ctx_servers; i++)); do
   echo "Running Prefill Worker: ${i}"
   leader_idx=${prefill_leaders[$i]}
   leader_node=${nodes[$leader_idx]}
@@ -177,7 +170,7 @@ for ((i=1; i<=PREFILL_COUNT; i++)); do
   echo "Prefill worker $i leader: $leader_node ($LEADER_IP)"
   # Calculate ntasks and nodes for prefill: each node has 8 GPUs, so nodes = ceil(ctx_tp_size/8)
   for ((j=0; j<num_ctx_nodes; j++)); do
-    node_idx=$(( (i-1)*num_ctx_nodes + j))
+    node_idx=$(( $leader_idx + j))
     node_name=${nodes[node_idx]}
     echo "Running Prefill Node: ${node_name}"
     srun -l --container-name=${CONTAINER_NAME} \
@@ -186,7 +179,7 @@ for ((i=1; i<=PREFILL_COUNT; i++)); do
       --ntasks 1 \
       --ntasks-per-node 1 \
       --nodes 1 \
-      bash ${SCRIPTS_DIR}/scripts/start_disagg_worker_sglang.sh dynamo prefill ${served_model_name} ${model_path} ${num_ctx_nodes} ${LEADER_IP} ${j} ${ctx_tp_size} ${SCRIPTS_DIR}/scripts/deepep.json 0.75 ${ctx_batch_size} &> ${full_logdir}/${SLURM_JOB_ID}_prefill_workers_${SLURM_NODEID}_${SLURMD_NODENAME}.log &
+      bash ${SCRIPTS_DIR}/scripts/start_disagg_worker_sglang.sh dynamo prefill ${served_model_name} ${model_path} ${num_ctx_nodes} ${LEADER_IP} ${j} ${ctx_tp_size} ${SCRIPTS_DIR}/scripts/deepep.json 0.75 ${ctx_batch_size} &> ${full_logdir}/${SLURM_JOB_ID}_prefill_workers_${i}_${j}_${node_name}.log &
     prefill_pids+=($!)
     echo "$!" >> "$PID_FILE"
   done
@@ -194,7 +187,7 @@ done
 
 num_gen_nodes=$((gen_nodes/num_gen_servers))
 decode_start_idx=$((ctx_nodes))
-for ((i=1; i<=num_gen_servers; i++)); do
+for ((i=0; i<num_gen_servers; i++)); do
   echo "Running Decode Worker: ${i}"
   leader_idx=${decode_leaders[$i]}
   leader_node=${nodes[$leader_idx]}
@@ -205,7 +198,7 @@ for ((i=1; i<=num_gen_servers; i++)); do
   
   decode_node_list=()
   for ((j=0; j<num_gen_nodes; j++)); do
-    node_idx=$((decode_start_idx + (i-1)*num_gen_nodes + j))
+    node_idx=$(( $leader_idx + j))
     node_name=${nodes[node_idx]}
     echo "Running Decode Node: ${node_name}"
     srun -l --container-name=${CONTAINER_NAME} \
@@ -216,7 +209,7 @@ for ((i=1; i<=num_gen_servers; i++)); do
         --ntasks 1 \
         --ntasks-per-node 1 \
         --overlap \
-        bash ${SCRIPTS_DIR}/scripts/start_disagg_worker_sglang.sh dynamo decode ${served_model_name} ${model_path} ${num_gen_nodes} ${LEADER_IP} ${j} ${gen_tp_size} ${SCRIPTS_DIR}/scripts/deepep.json ${gen_gpu_memory_fraction} ${gen_batch_size}  &> ${full_logdir}/${SLURM_JOB_ID}_decode_workers_${SLURM_NODEID}_${SLURMD_NODENAME}.log &
+        bash ${SCRIPTS_DIR}/scripts/start_disagg_worker_sglang.sh dynamo decode ${served_model_name} ${model_path} ${num_gen_nodes} ${LEADER_IP} ${j} ${gen_tp_size} ${SCRIPTS_DIR}/scripts/deepep.json ${gen_gpu_memory_fraction} ${gen_batch_size}  &> ${full_logdir}/${SLURM_JOB_ID}_decode_workers_${i}_${j}_${node_name}.log &
     echo "$!" >> "$PID_FILE"
   done
 done

@@ -54,7 +54,7 @@ gen_max_seq_len=$((${isl} + ${osl} + 203))
 
 WORK_DIR=${MOUNT_DIR}
 LOG_DIR=${log_dir:-${WORK_DIR}/${kind}-bm-${isl}-${osl}-${SLURM_JOB_ID}}
-SCRIPTS_DIR=${WORK_DIR}/
+SCRIPTS_DIR=${WORK_DIR}
 set_clock_cmd="bash ${SCRIPTS_DIR}/set_clock.sh"
 mkdir -p ${LOG_DIR}
 echo "trying to submit job"
@@ -160,7 +160,7 @@ srun -l --container-name=${CONTAINER_NAME} \
         --mpi=pmix --overlap -N 1 -n 1 \
 	--container-env ETCD_ENDPOINTS,NATS_SERVER,HEAD_NODE_IP,HEAD_NODE \
         -w ${nodes[0]} \
-        bash ${SCRIPTS_DIR}/scripts/start_frontend.sh &> ${full_logdir}/output_server.log &
+        bash ${SCRIPTS_DIR}/scripts/start_frontend.sh &> ${full_logdir}/${SLURM_JOB_ID}_output_server.log &
 SERVER_PID=$!
 echo "$SERVER_PID" >> "$PID_FILE"
 

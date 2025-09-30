@@ -1,6 +1,7 @@
 #! /bin/bash
 # SPDX-FileCopyrightText: Copyright (c) 2025 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
+set -x
 
 cmd=$1
 mode=$2
@@ -11,8 +12,8 @@ head_node_ip=$6
 node_rank=$7
 tp_size=$8
 deepep_config_path="${9:-scripts/deepep.json}"
-mem_fraction=${10:-0.85}
-max_batch_size=${11:-128}
+mem_fraction=${10}
+max_batch_size=${11}
 unset UCX_TLS
 echo " cmd: ${cmd}, mode: ${mode}, model_name: ${model_name}, model_path: ${model_path}"
 
