@@ -194,7 +194,7 @@ for ((i=1; i<=PREFILL_COUNT; i++)); do
       --ntasks ${ctx_tp_size} \
       --ntasks-per-node ${num_gpus_per_node} \
       --nodes ${num_ctx_nodes} \
-      bash ${SCRIPTS_DIR}/scripts/start_disagg_worker.sh ${full_logdir}/prefill_config.yaml "${enable_pdl}" ${ctx_gpus} ${nsys_on} ${served_model_name} ${model_path} 'prefill' &> ${full_logdir}/${SLURM_JOB_ID}_prefill_workers_${SLURM_NODEID}_${SLURMD_NODENAME}.log &
+      bash ${SCRIPTS_DIR}/scripts/start_disagg_worker.sh ${full_logdir}/prefill_config.yaml "${enable_pdl}" ${ctx_gpus} ${nsys_on} ${served_model_name} ${model_path} 'prefill' &> ${full_logdir}/${SLURM_JOB_ID}_prefill_workers_${i}.log &
   prefill_pids+=($!)
   echo "$!" >> "$PID_FILE"
 done
@@ -225,7 +225,7 @@ for ((i=1; i<=DECODE_COUNT; i++)); do
       --ntasks $gen_tp_size \
       --ntasks-per-node ${num_gpus_per_node} \
       --overlap \
-      bash ${SCRIPTS_DIR}/scripts/start_disagg_worker.sh ${full_logdir}/decode_config.yaml "${enable_pdl}" ${ctx_gpus} ${nsys_on} ${served_model_name} ${model_path} 'decode' &> ${full_logdir}/${SLURM_JOB_ID}_decode_workers_${SLURM_NODEID}_${SLURMD_NODENAME}.log &
+      bash ${SCRIPTS_DIR}/scripts/start_disagg_worker.sh ${full_logdir}/decode_config.yaml "${enable_pdl}" ${ctx_gpus} ${nsys_on} ${served_model_name} ${model_path} 'decode' &> ${full_logdir}/${SLURM_JOB_ID}_decode_workers_${i}.log &
   echo "$!" >> "$PID_FILE"
 done
 
