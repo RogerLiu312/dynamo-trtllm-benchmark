@@ -23,7 +23,7 @@ osl=${11}
 kind=${12}
 timeout_minutes=${13:-20}
 
-if [ "$#" -ne 12 ]; then
+if [ "$#" -ne 13 ]; then
     echo "Error: Expected 12 arguments, got $#"
     echo "Usage: $0 <model> <multi_round> <num_gen_servers> <concurrency_list> <streaming> <log_path> <total_gpus> <artifacts_dir> <model_path> <isl> <osl> <kind>"
     exit 1
