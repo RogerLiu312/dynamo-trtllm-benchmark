@@ -93,7 +93,7 @@ srun -l --container-image=${image} \
         --container-name=${CONTAINER_NAME} \
         --container-mounts=${container_mounts} \
         --mpi=pmix \
-        echo "Container up."
+        echo "Container up - $(env | grep CPU)"
 
 # generate the yaml file
 srun -l --container-name=${CONTAINER_NAME} \
@@ -193,6 +193,7 @@ for ((i=1; i<=PREFILL_COUNT; i++)); do
       --mpi=pmix --overlap -w ${prefill_nodes_csv} \
       --ntasks ${ctx_tp_size} \
       --ntasks-per-node ${num_gpus_per_node} \
+      --cpus-per-task=8 \
       --nodes ${num_ctx_nodes} \
       bash ${SCRIPTS_DIR}/scripts/start_disagg_worker.sh ${full_logdir}/prefill_config.yaml "${enable_pdl}" ${ctx_gpus} ${nsys_on} ${served_model_name} ${model_path} 'prefill' &> ${full_logdir}/${SLURM_JOB_ID}_prefill_workers_${i}.log &
   prefill_pids+=($!)
@@ -224,6 +225,7 @@ for ((i=1; i<=DECODE_COUNT; i++)); do
       --nodes ${num_gen_nodes} \
       --ntasks $gen_tp_size \
       --ntasks-per-node ${num_gpus_per_node} \
+      --cpus-per-task=8 \
       --overlap \
       bash ${SCRIPTS_DIR}/scripts/start_disagg_worker.sh ${full_logdir}/decode_config.yaml "${enable_pdl}" ${ctx_gpus} ${nsys_on} ${served_model_name} ${model_path} 'decode' &> ${full_logdir}/${SLURM_JOB_ID}_decode_workers_${i}.log &
   echo "$!" >> "$PID_FILE"
