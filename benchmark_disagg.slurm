@@ -185,7 +185,7 @@ for ((i=1; i<=PREFILL_COUNT; i++)); do
   # Calculate ntasks and nodes for prefill: each node has 8 GPUs, so nodes = ceil(ctx_tp_size/8)
   prefill_node_list=()
   for ((j=0; j<num_ctx_nodes; j++)); do
-    node_idx=$((node_idx + (i-1)*num_ctx_nodes + j))
+    node_idx=$(((i-1)*num_ctx_nodes + j))
     prefill_node_list+=("${nodes[node_idx]}")
   done
   prefill_nodes_csv=$(IFS=, ; echo "${prefill_node_list[*]}")
