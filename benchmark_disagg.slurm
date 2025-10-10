@@ -238,8 +238,9 @@ total_gpus=$((ctx_gpus + gen_gpus))
 sleep 20
 
 # start the loadgen
-srun -l --container-image=${benchmark_image} \
+srun -l --container-name=${CONTAINER_NAME} \
         --container-mounts=${container_mounts},${artifacts_dir}:${artifacts_dir} \
+        --container-env HEAD_NODE_IP,HEAD_NODE,SCRIPTS_DIR \
         --mpi=pmix --overlap -N 1 -n 1 \
 	-w ${nodes[0]} \
         bash ${SCRIPTS_DIR}/scripts/bench.sh ${served_model_name} ${MULTI_ROUND} ${num_gen_servers} "${concurrency_list}" ${STREAMING} ${full_logdir} ${total_gpus} ${artifacts_dir} ${model_path} ${isl} ${osl} ${kind} ${server_ready_timeout} > ${full_logdir}/${SLURM_JOB_ID}_bench.log 2>&1
