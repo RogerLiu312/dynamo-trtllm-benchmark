@@ -184,6 +184,10 @@ def gen_config_file(
     while val <= gen_batch_size:
         gen_cuda_graph_batch_sizes.append(val)
         val *= 2
+    if gen_batch_size >= 384:
+        gen_cuda_graph_batch_sizes.append(384)
+    if gen_batch_size >= 768:
+        gen_cuda_graph_batch_sizes.append(768)
     if gen_cuda_graph_batch_sizes[-1] != gen_batch_size:
         gen_cuda_graph_batch_sizes.append(gen_batch_size)
 
@@ -201,6 +205,7 @@ def gen_config_file(
         "moe_expert_parallel_size": ctx_tp_size,
         "enable_attention_dp": ctx_enable_attention_dp,
         "pipeline_parallel_size": 1,
+        "cuda_graph_config": None,
         "print_iter_log": True,
         "disable_overlap_scheduler": True,
         "kv_cache_config": {
@@ -236,6 +241,7 @@ def gen_config_file(
         },
         "moe_config": {
             "backend": gen_moe_backend,
+            "use_low_precision_moe_combine": True,
         },
         "cache_transceiver_config": {
             "max_tokens_in_buffer": cache_transceiver_max_num_tokens,
@@ -244,6 +250,9 @@ def gen_config_file(
             ),  # GB200 uses CAPITAL
         },
         "stream_interval": 20,
+        # Should be unused in Dynamo integration when TRTLLM detokenization
+        # is disabled, but set it here for config parity.
+        "num_postprocess_workers": 8,
     }
 
     if gen_tp_size == 8 and not gen_enable_attention_dp:
@@ -253,6 +262,8 @@ def gen_config_file(
         moe_load_balancer_file = os.path.join(
             os.path.dirname(config_path), "moe_load_balancer.yaml"
         )
+        # Ensure the directory exists before writing the file
+        os.makedirs(os.path.dirname(moe_load_balancer_file), exist_ok=True)
         moe_load_balancer_config = {
             "num_slots": eplb_num_slots,
             "layer_updates_per_iter": 1,

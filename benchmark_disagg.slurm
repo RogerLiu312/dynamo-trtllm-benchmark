@@ -20,8 +20,8 @@ CONTAINER_NAME=disaggr-test
 
 
 STREAMING=true
-CTX_GPU_FRAC=0.75
-CACHE_TRANSCEIVER_MAX_NUM_TOKENS=8448
+# CTX_GPU_FRAC=0.75
+# CACHE_TRANSCEIVER_MAX_NUM_TOKENS=8448
 
 num_ctx_servers=$1
 ctx_tp_size=$2
@@ -49,6 +49,8 @@ num_gpus_per_node=${23}
 log_dir=${24}
 benchmark_image="${25:-nvcr.io/nvidia/tritonserver:25.08-py3-sdk}"
 server_ready_timeout=${26:-20}
+ctx_gpu_memory_fraction=${27:-0.75}
+cache_transceiver_max_num_tokens=${28:-8448}
 
 ctx_max_seq_len=$((${isl} + 203))
 gen_max_seq_len=$((${isl} + ${osl} + 203))
@@ -107,8 +109,8 @@ srun -l --container-name=${CONTAINER_NAME} \
             --ctx_batch_size ${ctx_batch_size} \
             --ctx_max_num_tokens ${ctx_max_num_tokens} \
             --ctx_max_seq_len ${ctx_max_seq_len} \
-            --ctx_free_gpu_memory_fraction ${CTX_GPU_FRAC} \
-            --cache_transceiver_max_num_tokens ${CACHE_TRANSCEIVER_MAX_NUM_TOKENS} \
+            --ctx_free_gpu_memory_fraction ${ctx_gpu_memory_fraction} \
+            --cache_transceiver_max_num_tokens ${cache_transceiver_max_num_tokens} \
             --num_gen_servers ${num_gen_servers} \
             --gen_tp_size ${gen_tp_size} \
             --gen_batch_size ${gen_batch_size} \
