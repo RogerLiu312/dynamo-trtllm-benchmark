@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../InferenceMAX"
+		},
+		{
+			"path": "../dynamo"
+		}
+	],
+	"settings": {}
+}
