@@ -7,6 +7,21 @@ set -e
 set -u
 trap 'echo "Error occurred at line $LINENO"; exit 1' ERR
 
+# Check if SCRIPTS_DIR is set, if not try to infer it or exit
+if [ -z "${SCRIPTS_DIR:-}" ]; then
+    # Try to infer SCRIPTS_DIR from the current script location
+    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    SCRIPTS_DIR="$(dirname "$SCRIPT_DIR")"
+    echo "SCRIPTS_DIR not set, inferred as: ${SCRIPTS_DIR}"
+fi
+
+# Verify SCRIPTS_DIR exists and contains expected structure
+if [ ! -d "${SCRIPTS_DIR}/scripts/bench" ]; then
+    echo "Error: SCRIPTS_DIR (${SCRIPTS_DIR}) does not contain expected structure"
+    echo "Expected: ${SCRIPTS_DIR}/scripts/bench to exist"
+    exit 1
+fi
+
 WAIT_TIME=60
 
 model=$1
@@ -149,41 +164,53 @@ curl -v  -w "%{http_code}" "${hostname}:${port}/v1/chat/completions" \
 }'
 
 # cp ${log_path}/output_workers.log ${log_path}/workers_start.log
+python3 ${SCRIPTS_DIR}/scripts/bench/benchmark_serving.py \
+        --served-model-name ${model} \
+        --model ${model_path} \
+        --dataset-name random \
+        --num-prompts "${multi_round}" \
+        --random-input-len ${isl} \
+        --random-output-len ${osl} \
+        --random-range-ratio 0.8 \
+        --ignore-eos \
+        --use-chat-template \
+        --backend "dynamo" \
+        --endpoint "/v1/completions" \
+        --percentile-metrics ttft,tpot,itl,e2el \
+        --max-concurrency "1" \
+        --host ${hostname} \
+        --port ${port}
+
 echo "Starting benchmark..."
 for concurrency in ${concurrency_list}; do
+    original_concurrency=${concurrency}
     concurrency=$((concurrency * num_gen_servers))
     num_prompts=$((concurrency * multi_round))
     echo "Benchmarking with concurrency ${concurrency} ... ${num_prompts} prompts"
-    mkdir -p ${artifacts_dir}/concurrency_${concurrency}
-    genai-perf profile \
-    	--model ${model} \
-    	--tokenizer ${model_path} \
-    	--endpoint-type chat \
-    	--endpoint /v1/chat/completions \
-    	--streaming \
-    	--url ${hostname}:${port} \
-    	--synthetic-input-tokens-mean ${isl} \
-    	--synthetic-input-tokens-stddev 0 \
-    	--output-tokens-mean ${osl} \
-    	--output-tokens-stddev 0 \
-    	--extra-inputs max_tokens:${osl} \
-    	--extra-inputs min_tokens:${osl} \
-    	--extra-inputs ignore_eos:true \
-	    --extra-inputs "{\"nvext\":{\"ignore_eos\":true}}" \
-    	--concurrency ${concurrency} \
-    	--request-count $(($concurrency*10)) \
-    	--warmup-request-count $(($concurrency*2)) \
-	    --num-dataset-entries ${num_prompts} \
-    	--random-seed 100 \
-    	--artifact-dir ${artifacts_dir}/concurrency_${concurrency} \
-    	-- \
-    	-v \
-    	--max-threads ${concurrency} \
-    	-H 'Authorization: Bearer NOT USED' \
-    	-H 'Accept: text/event-stream'
+    mkdir -p ${log_path}/concurrency_${concurrency}
+
+    python3 ${SCRIPTS_DIR}/scripts/bench/benchmark_serving.py \
+        --served-model-name ${model} \
+        --model ${model_path} \
+        --dataset-name random \
+        --num-prompts "$num_prompts" \
+        --random-input-len ${isl} \
+        --random-output-len ${osl} \
+        --random-range-ratio 0.8 \
+        --use-chat-template \
+        --ignore-eos \
+        --use-chat-template \
+        --backend "dynamo" \
+        --endpoint "/v1/completions" \
+        --percentile-metrics ttft,tpot,itl,e2el \
+        --max-concurrency "$concurrency" \
+        --host ${hostname} \
+        --port ${port} \
+        --save-result \
+        --result-dir "${log_path}/concurrency_${concurrency}" \
+        --result-filename "results_concurrency_${original_concurrency}_gpus_${total_gpus}.json"
+
     echo "Benchmark with concurrency ${concurrency} done"
-    # do_get_logs ${log_path}/output_workers.log ${log_path}/concurrency_${concurrency}
-    # echo -n "" > ${log_path}/output_workers.log
 done
 
 
