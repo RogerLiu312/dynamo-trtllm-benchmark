@@ -44,6 +44,7 @@ if [ "$#" -ne 13 ]; then
     exit 1
 fi
 
+env | grep CPU
 echo "Arguments:"
 echo "  model: $model"
 echo "  multi_round: $multi_round"
