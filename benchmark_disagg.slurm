@@ -160,7 +160,7 @@ cleanup_and_exit() {
 # start the server
 srun -l --container-name=${CONTAINER_NAME} \
         --container-mounts=${container_mounts} \
-        --mpi=pmix --overlap -N 1 -n 1 \
+        --mpi=pmix --overlap --oversubscribe -N 1 -n 1 \
 	--container-env ETCD_ENDPOINTS,NATS_SERVER,HEAD_NODE_IP,HEAD_NODE \
         -w ${nodes[0]} \
         bash ${SCRIPTS_DIR}/scripts/start_frontend.sh &> ${full_logdir}/${SLURM_JOB_ID}_output_server.log &
@@ -192,7 +192,7 @@ for ((i=1; i<=PREFILL_COUNT; i++)); do
   echo "Running Prefill Nodes: ${prefill_nodes_csv}"
   srun -l --container-name=${CONTAINER_NAME} \
       --container-mounts=${container_mounts} \
-      --mpi=pmix --overlap -w ${prefill_nodes_csv} \
+      --mpi=pmix --overlap --oversubscribe -w ${prefill_nodes_csv} \
       --ntasks ${ctx_tp_size} \
       --ntasks-per-node ${num_gpus_per_node} \
       --nodes ${num_ctx_nodes} \
@@ -226,7 +226,7 @@ for ((i=1; i<=DECODE_COUNT; i++)); do
       --nodes ${num_gen_nodes} \
       --ntasks $gen_tp_size \
       --ntasks-per-node ${num_gpus_per_node} \
-      --overlap \
+      --overlap --oversubscribe \
       bash ${SCRIPTS_DIR}/scripts/start_disagg_worker.sh ${full_logdir}/decode_config.yaml "${enable_pdl}" ${ctx_gpus} ${nsys_on} ${served_model_name} ${model_path} 'decode' &> ${full_logdir}/${SLURM_JOB_ID}_decode_workers_${i}.log &
   echo "$!" >> "$PID_FILE"
 done
