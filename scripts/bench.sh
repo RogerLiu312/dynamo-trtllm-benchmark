@@ -190,7 +190,7 @@ for concurrency in ${concurrency_list}; do
     echo "Benchmarking with concurrency ${concurrency} ... ${num_prompts} prompts"
     mkdir -p ${log_path}/concurrency_${concurrency}
 
-    python3 ${SCRIPTS_DIR}/scripts/bench/benchmark_serving.py \
+    python3 ${SCRIPTS_DIR}/scripts/bench/benchmark_serving_mp.py --num-workers 8 \
         --served-model-name ${model} \
         --model ${model_path} \
         --dataset-name random \
