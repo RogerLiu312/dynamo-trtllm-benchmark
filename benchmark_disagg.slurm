@@ -51,6 +51,7 @@ benchmark_image="${25:-nvcr.io/nvidia/tritonserver:25.08-py3-sdk}"
 server_ready_timeout=${26:-20}
 ctx_gpu_memory_fraction=${27:-0.75}
 cache_transceiver_max_num_tokens=${28:-8448}
+multi_round=${29:-8}
 
 ctx_max_seq_len=$((${isl} + 203))
 gen_max_seq_len=$((${isl} + ${osl} + 203))
@@ -241,7 +242,7 @@ srun -l --container-name=${CONTAINER_NAME} \
         --container-env HEAD_NODE_IP,HEAD_NODE,SCRIPTS_DIR \
         --mpi=pmix --overlap -N 1 -n 1 \
 	-w ${nodes[0]} \
-        bash ${SCRIPTS_DIR}/scripts/bench.sh ${served_model_name} ${MULTI_ROUND} ${num_gen_servers} "${concurrency_list}" ${STREAMING} ${full_logdir} ${total_gpus} ${artifacts_dir} ${model_path} ${isl} ${osl} ${kind} ${server_ready_timeout} > ${full_logdir}/${SLURM_JOB_ID}_bench.log 2>&1
+        bash ${SCRIPTS_DIR}/scripts/bench.sh ${served_model_name} ${multi_round} ${num_gen_servers} "${concurrency_list}" ${STREAMING} ${full_logdir} ${total_gpus} ${artifacts_dir} ${model_path} ${isl} ${osl} ${kind} ${server_ready_timeout} > ${full_logdir}/${SLURM_JOB_ID}_bench.log 2>&1
 
 
 # Cleanup will be handled by the EXIT trap
