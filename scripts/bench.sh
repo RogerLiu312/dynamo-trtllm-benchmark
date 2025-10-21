@@ -169,7 +169,7 @@ python3 ${SCRIPTS_DIR}/scripts/bench/benchmark_serving.py \
         --served-model-name ${model} \
         --model ${model_path} \
         --dataset-name random \
-        --num-prompts "${multi_round}" \
+        --num-prompts "256" \
         --random-input-len ${isl} \
         --random-output-len ${osl} \
         --random-range-ratio 0.8 \
@@ -178,7 +178,7 @@ python3 ${SCRIPTS_DIR}/scripts/bench/benchmark_serving.py \
         --backend "dynamo" \
         --endpoint "/v1/completions" \
         --percentile-metrics ttft,tpot,itl,e2el \
-        --max-concurrency "1" \
+        --max-concurrency "128" \
         --host ${hostname} \
         --port ${port}
 
